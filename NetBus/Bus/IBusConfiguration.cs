@@ -1,13 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace NetBus.Bus
+﻿namespace NetBus.Bus
 {
-    public interface IBusConfiguration
+    public interface IBusConfiguration : IServicesConfigurator
     {
 
         string SubscriberName { get; set; }
-
-        void ConfigureServices(IServiceCollection serviceCollection);
 
     }
 }
