@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus", "NetBus\NetBus.csproj", "{CE094C40-5355-4EA7-BEE1-15D20BEE950F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.Test", "NetBus.Test\NetBus.Test.csproj", "{97768E25-D629-43BA-B3F1-571FE06C5352}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.Host", "NetBus.Host\NetBus.Host.csproj", "{4700B462-9744-46F0-AC91-EC0C2BC48C3E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.Test.Application", "NetBus.Test.Application\NetBus.Test.Application.csproj", "{80F9A43F-92C9-4D55-B9A0-2B375DFB7FD3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.MockBus", "NetBus.MockBus\NetBus.MockBus.csproj", "{054481A0-B11B-40C3-AEEA-821C063899E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetBus.RabbitBus", "NetBus.RabbitBus\NetBus.RabbitBus.csproj", "{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE094C40-5355-4EA7-BEE1-15D20BEE950F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE094C40-5355-4EA7-BEE1-15D20BEE950F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE094C40-5355-4EA7-BEE1-15D20BEE950F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE094C40-5355-4EA7-BEE1-15D20BEE950F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97768E25-D629-43BA-B3F1-571FE06C5352}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97768E25-D629-43BA-B3F1-571FE06C5352}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97768E25-D629-43BA-B3F1-571FE06C5352}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97768E25-D629-43BA-B3F1-571FE06C5352}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4700B462-9744-46F0-AC91-EC0C2BC48C3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4700B462-9744-46F0-AC91-EC0C2BC48C3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4700B462-9744-46F0-AC91-EC0C2BC48C3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4700B462-9744-46F0-AC91-EC0C2BC48C3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80F9A43F-92C9-4D55-B9A0-2B375DFB7FD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80F9A43F-92C9-4D55-B9A0-2B375DFB7FD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80F9A43F-92C9-4D55-B9A0-2B375DFB7FD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80F9A43F-92C9-4D55-B9A0-2B375DFB7FD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{054481A0-B11B-40C3-AEEA-821C063899E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{054481A0-B11B-40C3-AEEA-821C063899E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{054481A0-B11B-40C3-AEEA-821C063899E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{054481A0-B11B-40C3-AEEA-821C063899E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FFFAA000-8EF0-4A93-A3EC-36BA65172EF5}
+	EndGlobalSection
+EndGlobal
