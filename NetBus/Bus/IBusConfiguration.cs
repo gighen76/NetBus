@@ -6,7 +6,6 @@ namespace NetBus.Bus
     {
 
         string SubscriberName { get; set; }
-        string TracerName { get; set; }
 
         void ConfigureServices(IServiceCollection serviceCollection);
 

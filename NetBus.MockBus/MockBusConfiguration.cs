@@ -6,7 +6,6 @@ namespace NetBus.MockBus
     public class MockBusConfiguration : IBusConfiguration
     {
         public string SubscriberName { get; set; }
-        public string TracerName { get; set; }
 
         public void ConfigureServices(IServiceCollection serviceCollection)
         {

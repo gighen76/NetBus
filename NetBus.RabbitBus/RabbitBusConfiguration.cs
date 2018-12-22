@@ -11,7 +11,6 @@ namespace NetBus.RabbitBus
     public class RabbitBusConfiguration : IBusConfiguration
     {
         public string SubscriberName { get; set; }
-        public string TracerName { get; set; }
 
         public string Uri { get; set; }
         public TimeSpan RecoveryInterval { get; set; }
