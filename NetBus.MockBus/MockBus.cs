@@ -13,19 +13,19 @@ namespace NetBus.MockBus
 
         }
 
-        private HashSet<string> subscribedTopics = new HashSet<string>();
+        public HashSet<BusTopic> SubscribedTopics = new HashSet<BusTopic>();
 
-        public override async Task PublishAsync(string topicName, byte[] message)
+        public override async Task PublishAsync(BusTopic topic, byte[] message)
         {
-            if (subscribedTopics.Contains(topicName))
+            if (SubscribedTopics.Contains(topic))
             {
-                await ProcessMessage(topicName, message);
+                await ProcessMessage(topic, message);
             }
         }
 
-        public override Task SubscribeAsync(string topicName)
+        public override Task SubscribeAsync(BusTopic topic)
         {
-            subscribedTopics.Add(topicName);
+            SubscribedTopics.Add(topic);
             return Task<bool>.FromResult(true);
         }
 

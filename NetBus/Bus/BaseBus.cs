@@ -16,8 +16,8 @@ namespace NetBus.Bus
         public string SubscriberName => busConfiguration.SubscriberName;
 
         private readonly object m_eventLock = new object();
-        private Func<string, byte[], Task> _OnMessage;
-        public event Func<string, byte[], Task> OnMessage
+        private Func<BusTopic, byte[], Task> _OnMessage;
+        public event Func<BusTopic, byte[], Task> OnMessage
         {
             add
             {
@@ -35,14 +35,14 @@ namespace NetBus.Bus
             }
         }
 
-        protected Task ProcessMessage(string topicName, byte[] message)
+        protected Task ProcessMessage(BusTopic topic, byte[] message)
         {
-            return _OnMessage(topicName, message);
+            return _OnMessage(topic, message);
         }
 
-        abstract public Task PublishAsync(string topicName, byte[] message);
+        abstract public Task PublishAsync(BusTopic topic, byte[] message);
         
-        abstract public Task SubscribeAsync(string topicName);
+        abstract public Task SubscribeAsync(BusTopic topic);
 
     }
 }

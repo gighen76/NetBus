@@ -17,7 +17,7 @@ namespace NetBus
     public class NetBus
     {
 
-        private ConcurrentDictionary<string, ConcurrentDictionary<Guid, Func<byte[], Task>>> handlers = new ConcurrentDictionary<string, ConcurrentDictionary<Guid, Func<byte[], Task>>>();
+        private ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<byte[], Task>>> handlers = new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<byte[], Task>>>();
 
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
@@ -38,11 +38,11 @@ namespace NetBus
 
         public string SubscriberName => bus.SubscriberName;
 
-        private async Task Bus_OnMessage(string topicName, byte[] eventBytes)
+        private async Task Bus_OnMessage(BusTopic topic, byte[] eventBytes)
         {
-            if (handlers.ContainsKey(topicName))
+            if (handlers.ContainsKey(topic))
             {
-                foreach(var handler in handlers[topicName].Values)
+                foreach(var handler in handlers[topic].Values)
                 {
                     await handler(eventBytes);
                 }
@@ -53,10 +53,10 @@ namespace NetBus
         {
             var eventBytes = serializer.Serialize(busEvent);
 
-            var topicName = topicResolver.ResolveTopicName<T>();
+            var topic = topicResolver.ResolveTopicName<T>();
 
-            await bus.PublishAsync(topicName, eventBytes);
-            await tracer.RegisterBusEventAsync(SubscriberName, topicName, busEvent);
+            await bus.PublishAsync(topic, eventBytes);
+            await tracer.RegisterBusEventAsync(SubscriberName, topic, busEvent);
         }
 
         public Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
@@ -103,9 +103,9 @@ namespace NetBus
 
         public async Task<Guid> SubscribeAsync<T>(Func<BusEvent<T>, Task> handler) where T : class
         {
-            var topicName = topicResolver.ResolveTopicName<T>();
+            var topic = topicResolver.ResolveTopicName<T>();
 
-            var topicHandlers = handlers.GetOrAdd(topicName, new ConcurrentDictionary<Guid, Func<byte[], Task>>());
+            var topicHandlers = handlers.GetOrAdd(topic, new ConcurrentDictionary<Guid, Func<byte[], Task>>());
             var handlerGuid = Guid.NewGuid();
 
             topicHandlers.GetOrAdd(handlerGuid, async (byte[] messageBytes) =>
@@ -124,7 +124,7 @@ namespace NetBus
                 
             });
 
-            await bus.SubscribeAsync(topicName);
+            await bus.SubscribeAsync(topic);
             return handlerGuid;
         }
 
@@ -134,10 +134,10 @@ namespace NetBus
         {
             List<Guid> result = new List<Guid>();
 
-            var topicName = topicResolver.ResolveTopicName<T>();
-            if (handlers.ContainsKey(topicName))
+            var topic = topicResolver.ResolveTopicName<T>();
+            if (handlers.ContainsKey(topic))
             {
-                result.AddRange(handlers[topicName].Keys);
+                result.AddRange(handlers[topic].Keys);
             }
             return result;
         }

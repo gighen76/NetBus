@@ -14,9 +14,9 @@ namespace NetBus.Tracer
             this.bus = bus;
         }
 
-        public Task RegisterBusEventAsync<T>(string senderSubscriberName, string topicName, BusEvent<T> busEvent) where T : class
+        public Task RegisterBusEventAsync<T>(string senderSubscriberName, BusTopic topic, BusEvent<T> busEvent) where T : class
         {
-            Console.WriteLine($"{senderSubscriberName} -> {topicName} : #{busEvent.Id}# {busEvent.ParentId} {busEvent.OriginId}");
+            Console.WriteLine($"{senderSubscriberName} -> {topic.Name} : #{busEvent.Id}# {busEvent.ParentId} {busEvent.OriginId}");
             return Task.FromResult(true);
         }
 

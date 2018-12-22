@@ -26,10 +26,10 @@ namespace NetBus.Test
         {
             var topicResolver = new DefaultTopicResolver();
 
-            var topicName = topicResolver.ResolveTopicName<MessageWithTopic>();
+            var topic = topicResolver.ResolveTopicName<MessageWithTopic>();
 
-            Assert.AreEqual("TopicName", topicName);
-            Assert.AreNotEqual(typeof(MessageWithTopic), topicName);
+            Assert.AreEqual("TopicName", topic.ToString());
+            Assert.AreNotEqual(typeof(MessageWithTopic), topic.ToString());
 
         }
 
@@ -38,9 +38,9 @@ namespace NetBus.Test
         {
             var topicResolver = new DefaultTopicResolver();
 
-            var topicName = topicResolver.ResolveTopicName<MessageWithoutTopic>();
+            var topic = topicResolver.ResolveTopicName<MessageWithoutTopic>();
 
-            Assert.AreEqual(typeof(MessageWithoutTopic).Name, topicName);
+            Assert.AreEqual(typeof(MessageWithoutTopic).Name, topic.ToString());
 
         }
 

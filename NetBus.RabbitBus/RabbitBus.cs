@@ -28,24 +28,24 @@ namespace NetBus.RabbitBus
         {
             if (headers.ContainsKey("TopicName"))
             {
-                await this.ProcessMessage(headers["TopicName"], message);
+                await this.ProcessMessage(new BusTopic(headers["TopicName"]), message);
             }
         }
 
-        public override Task PublishAsync(string topicName, byte[] message)
+        public override Task PublishAsync(BusTopic topic, byte[] message)
         {
             var headers = new Dictionary<string, string>
             {
-                { "TopicName", topicName }
+                { "TopicName", topic.Name }
             };
 
-            return publisher.PublishAsync(SubscriberName, topicName, headers, message);
+            return publisher.PublishAsync(SubscriberName, topic.Name, headers, message);
 
         }
 
-        public override Task SubscribeAsync(string topicName)
+        public override Task SubscribeAsync(BusTopic topic)
         {
-            return consumer.SubscribeAsync(SubscriberName, topicName, configuration.PrefetchCount);
+            return consumer.SubscribeAsync(SubscriberName, topic.Name, configuration.PrefetchCount);
         }
     }
 }

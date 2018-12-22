@@ -5,7 +5,7 @@ namespace NetBus.TopicResolver
 {
     public class DefaultTopicResolver : ITopicResolver
     {
-        public string ResolveTopicName<T>()
+        public BusTopic ResolveTopicName<T>()
         {
             Type type = typeof(T);
 
@@ -15,11 +15,11 @@ namespace NetBus.TopicResolver
                 var name = topicAttribute.ConstructorArguments[0].Value.ToString();
                 if (name != null)
                 {
-                    return name;
+                    return new BusTopic(name);
                 }
             }
 
-            return type.Name;
+            return new BusTopic(type.Name);
 
         }
     }

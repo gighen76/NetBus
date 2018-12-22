@@ -1,6 +1,7 @@
 ﻿using FakeItEasy;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NetBus.Bus;
+using NetBus.MockBus;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,31 +14,16 @@ namespace NetBus.Test
     [TestClass]
     public class BaseBusTest
     {
-        class MockBaseBus : BaseBus
-        {
-
-            public MockBaseBus(IBusConfiguration configuration) : base(configuration) { }
-
-            public override Task PublishAsync(string topicName, byte[] message)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Task SubscribeAsync(string topicName)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
 
         [TestMethod]
-        public void ShoudThrowException_WhenBusConfiguraionIsNull()
+        public void ShoudThrowException_WhenBusConfigurationIsNull()
         {
             Assert.ThrowsException<ArgumentNullException>(() =>
             {
-                var baseBus = new MockBaseBus(null);
+                var bus = new MockBus.MockBus(null);
             });
         }
+
 
         [TestMethod]
         public void ShoudReturnSubscriberName_FromIBusConfiguration()
@@ -52,6 +38,33 @@ namespace NetBus.Test
 
             Assert.AreEqual(subscriberName, baseBus.SubscriberName);
         }
+
+        [TestMethod]
+        public async Task MustSubscribeTwoTopics()
+        {
+
+            var bus = new MockBus.MockBus(new MockBusConfiguration());
+
+            await bus.SubscribeAsync(new BusTopic("a"));
+            await bus.SubscribeAsync(new BusTopic("b"));
+
+            Assert.AreEqual(bus.SubscribedTopics.Count(), 2);
+
+        }
+
+        [TestMethod]
+        public async Task MustSubscribeOneTopics()
+        {
+
+            var bus = new MockBus.MockBus(new MockBusConfiguration());
+
+            await bus.SubscribeAsync(new BusTopic("a"));
+            await bus.SubscribeAsync(new BusTopic("a"));
+
+            Assert.AreEqual(bus.SubscribedTopics.Count(), 1);
+
+        }
+
 
     }
 }

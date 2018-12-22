@@ -5,7 +5,7 @@ namespace NetBus.TopicResolver
     public interface ITopicResolver
     {
 
-        string ResolveTopicName<T>();
+        BusTopic ResolveTopicName<T>();
 
     }
 }
