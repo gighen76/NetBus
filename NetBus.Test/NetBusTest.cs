@@ -25,7 +25,7 @@ namespace NetBus.Test
             ServiceCollection sc = new ServiceCollection();
             sc.UseNetBus<MockBusConfiguration>(c =>
             {
-                c.SubscriberName = "test";
+                c.Application = new BusApplication("test");
             });
 
             netbus = sc.BuildServiceProvider().GetRequiredService<NetBus>();

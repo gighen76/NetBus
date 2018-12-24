@@ -33,7 +33,7 @@ namespace NetBus.Test.Application
                 })
                 .UseNetBusService<RabbitBusConfiguration,Configuration>(configuration =>
                 {
-                    configuration.SubscriberName = "test";
+                    configuration.Application = new BusApplication("test");
                     configuration.PrefetchCount = 10;
                     configuration.Uri = "amqp://njelcwjj:cnqSAr1DUt1C5JQd6o3ybAj0uCrP1f0S@flamingo.rmq.cloudamqp.com/njelcwjj";
                     configuration.RecoveryInterval = TimeSpan.FromMinutes(5);

@@ -3,7 +3,7 @@
     public interface IBusConfiguration : IServicesConfigurator
     {
 
-        string SubscriberName { get; set; }
+        BusApplication Application { get; set; }
 
     }
 }

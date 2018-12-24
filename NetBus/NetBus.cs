@@ -36,7 +36,7 @@ namespace NetBus
             
         }
 
-        public string SubscriberName => bus.SubscriberName;
+        public BusApplication Application => bus.Application;
 
         private async Task Bus_OnMessage(BusTopic topic, byte[] eventBytes)
         {
@@ -56,7 +56,7 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
 
             await bus.PublishAsync(topic, eventBytes);
-            await tracer.RegisterBusEventAsync(SubscriberName, topic, busEvent);
+            await tracer.RegisterBusEventAsync(Application, topic, busEvent);
         }
 
         public Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
@@ -120,7 +120,7 @@ namespace NetBus
                 {
                     
                     await handler(busEvent);
-                    await tracer.AddBusEventTraceAsync(SubscriberName, busEvent, TimeSpan.FromMilliseconds(1));
+                    await tracer.AddBusEventTraceAsync(Application, topic, busEvent, TimeSpan.FromMilliseconds(1));
                 }
                 catch (Exception ex)
                 {

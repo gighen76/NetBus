@@ -29,14 +29,16 @@ namespace NetBus.Test
         public void ShoudReturnSubscriberName_FromIBusConfiguration()
         {
             var subscriberName = "subscriberName";
+            var application = new BusApplication(subscriberName);
+            
             var busConfiguration = A.Fake<IBusConfiguration>();
-            busConfiguration.SubscriberName = subscriberName;
+            busConfiguration.Application = application;
             var baseBus = A.Fake<BaseBus>(options =>
             {
                 options.WithArgumentsForConstructor(new[] { busConfiguration });
             });
 
-            Assert.AreEqual(subscriberName, baseBus.SubscriberName);
+            Assert.AreEqual(subscriberName, baseBus.Application.Name);
         }
 
         [TestMethod]

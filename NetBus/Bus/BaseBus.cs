@@ -13,7 +13,7 @@ namespace NetBus.Bus
             this.busConfiguration = busConfiguration ?? throw new ArgumentNullException(nameof(busConfiguration));
         }
 
-        public string SubscriberName => busConfiguration.SubscriberName;
+        public BusApplication Application => busConfiguration.Application;
 
         private readonly object m_eventLock = new object();
         private Func<BusTopic, byte[], Task> _OnMessage;

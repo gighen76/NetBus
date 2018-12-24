@@ -5,7 +5,7 @@ namespace NetBus.MockBus
 {
     public class MockBusConfiguration : IBusConfiguration
     {
-        public string SubscriberName { get; set; }
+        public BusApplication Application { get; set; }
 
         public void ConfigureServices(IServiceCollection serviceCollection)
         {
