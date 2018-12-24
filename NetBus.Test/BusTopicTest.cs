@@ -40,6 +40,17 @@ namespace NetBus.Test
             var topic2 = new BusTopic("name");
 
             Assert.AreEqual(topic1, topic2);
+            Assert.IsTrue(topic1 == topic2);
+        }
+
+        [TestMethod]
+        public void TopicWithSameName_MustBeNotEquals()
+        {
+            var topic1 = new BusTopic("name1");
+            var topic2 = new BusTopic("name2");
+
+            Assert.AreNotEqual(topic1, topic2);
+            Assert.IsTrue(topic1 != topic2);
         }
 
         [TestMethod]

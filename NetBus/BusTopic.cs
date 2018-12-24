@@ -37,7 +37,16 @@ namespace NetBus
         {
             return Name;
         }
-
+        
+        public static bool operator ==(BusTopic btLeft, BusTopic btRight)
+        {
+            return btLeft.Equals(btRight);
+        }
+        public static bool operator !=(BusTopic btLeft, BusTopic btRight)
+        {
+            return !btLeft.Equals(btRight);
+        }
+        
 
     }
 }

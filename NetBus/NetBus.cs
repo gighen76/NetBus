@@ -78,14 +78,14 @@ namespace NetBus
                 if (waitedEvent.OriginId == busEvent.OriginId)
                 {
                     timer.Dispose();
-                    await UnsubscribeAsync(guid);
+                    await UnsubscribeAsync<R>(guid);
                     tcs.SetResult(waitedEvent.Message);
                 }
             });
             timer = new Timer(state =>
             {
                 timer.Dispose();
-                UnsubscribeAsync(guid).Wait();
+                UnsubscribeAsync<R>(guid).Wait();
                 tcs.TrySetException(new TimeoutException($"Request timed out."));
             }, null, timeout, TimeSpan.FromMilliseconds(-1));
 
@@ -94,10 +94,15 @@ namespace NetBus
             return await tcs.Task;
         }
         
-        public Task UnsubscribeAsync(Guid guid)
+        public Task UnsubscribeAsync<T>(Guid guid)
         {
-            var topicHandler = handlers.Where(h => h.Value.ContainsKey(guid)).Select(h => h.Value).SingleOrDefault();
-            topicHandler.TryRemove(guid, out Func<byte[], Task> handler);
+            var topic = topicResolver.ResolveTopicName<T>();
+            var topicHandler = handlers.Where(h => h.Key == topic).Select(h => h.Value).SingleOrDefault();
+            if (topicHandler != null)
+            {
+                topicHandler.TryRemove(guid, out Func<byte[], Task> handler);
+            }
+            
             return Task.FromResult(true);
         }
 
