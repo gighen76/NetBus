@@ -36,11 +36,6 @@ namespace NetBus.Test
         public async Task TestPubSub()
         {
 
-            await netbus.SubscribeSubscriber<TestMessageSubscriber, TestMessage>(() =>
-            {
-                return new TestMessageSubscriber();
-            });
-
             bool subscriberCalled = false;
             await netbus.SubscribeAsync(async (BusEvent<TestMessage> message) => {
 
