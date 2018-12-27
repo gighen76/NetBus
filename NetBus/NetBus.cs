@@ -1,75 +1,20 @@
-﻿using NetBus.Serializer;
+﻿using NetBus.Bus;
+using NetBus.Serializer;
 using NetBus.TopicResolver;
+using NetBus.Tracer;
 using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Threading;
 using System.Collections.Generic;
-using NetBus.Tracer;
-using Microsoft.Extensions.Options;
-using NetBus.Bus;
-using NetBus.Subscriber;
-using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NetBus
 {
     public class NetBus
     {
 
-        interface ITopicHandler
-        {
-            Task HandleAsync(BusApplication application, BusTopic topic, byte[] messageBytes);
-            Task RemoveHandlerAsync(Guid guid);
-            List<Guid> GetHandlers();
-        }
-        class TopicHandler<T> : ITopicHandler where T : class
-        {
-
-            private readonly ISerializer serializer;
-            private readonly ITracer tracer;
-            private readonly ConcurrentDictionary<Guid, Func<BusEvent<T>, Task>> handlers = new ConcurrentDictionary<Guid, Func<BusEvent<T>, Task>>();
-
-            public TopicHandler(ISerializer serializer, ITracer tracer)
-            {
-                this.serializer = serializer;
-                this.tracer = tracer;
-            }
-
-            public Task<Guid> AddHandlerAsync(Func<BusEvent<T>, Task> handler)
-            {
-                Guid handlerGuid = Guid.NewGuid();
-                handlers.GetOrAdd(handlerGuid, handler);
-                return Task.FromResult<Guid>(handlerGuid);
-            }
-
-            public Task RemoveHandlerAsync(Guid guid)
-            {
-                handlers.TryRemove(guid, out Func<BusEvent<T>, Task> handler);
-                return Task.CompletedTask;
-            }
-
-            public List<Guid> GetHandlers()
-            {
-                return handlers.Keys.ToList();
-            }
-
-
-            public async Task HandleAsync(BusApplication application, BusTopic topic, byte[] messageBytes)
-            {
-                var busEvent = serializer.Deserialize<BusEvent<T>>(messageBytes);
-                foreach(var handler in handlers)
-                {
-                    await handler.Value(busEvent);
-                }
-                await tracer.AddBusEventTraceAsync(application, topic, busEvent, TimeSpan.FromSeconds(1));
-
-            }
-
-        }
-
-
-        private ConcurrentDictionary<BusTopic, ITopicHandler> topicHandlers = new ConcurrentDictionary<BusTopic, ITopicHandler>();
+        private ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Func<byte[],Task>>> topicHandlers = 
+            new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<byte[], Task>>>();
 
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
@@ -94,7 +39,10 @@ namespace NetBus
         {
             if (topicHandlers.ContainsKey(topic))
             {
-                await topicHandlers[topic].HandleAsync(Application, topic, eventBytes);
+                foreach (var handler in topicHandlers[topic])
+                {
+                    await handler.Value(eventBytes);
+                }
             }
         }
 
@@ -127,14 +75,14 @@ namespace NetBus
                 if (waitedEvent.OriginId == busEvent.OriginId)
                 {
                     timer.Dispose();
-                    await UnsubscribeAsync<R>(guid);
+                    await UnsubscribeAsync(guid);
                     tcs.SetResult(waitedEvent.Message);
                 }
             });
             timer = new Timer(state =>
             {
                 timer.Dispose();
-                UnsubscribeAsync<R>(guid).Wait();
+                UnsubscribeAsync(guid).Wait();
                 tcs.TrySetException(new TimeoutException($"Request timed out."));
             }, null, timeout, TimeSpan.FromMilliseconds(-1));
 
@@ -143,22 +91,28 @@ namespace NetBus
             return await tcs.Task;
         }
         
-        public async Task UnsubscribeAsync<T>(Guid guid) where T: class
+        public Task UnsubscribeAsync(Guid guid)
         {
-            var topic = topicResolver.ResolveTopicName<T>();
-
-            if (topicHandlers.ContainsKey(topic))
+            foreach(var topicHandler in topicHandlers)
             {
-                await topicHandlers[topic].RemoveHandlerAsync(guid);
+                topicHandler.Value.TryRemove(guid, out Func<byte[], Task> handler);
             }
+            return Task.CompletedTask;
         }
 
         public async Task<Guid> SubscribeAsync<T>(Func<BusEvent<T>, Task> handler) where T : class
         {
             var topic = topicResolver.ResolveTopicName<T>();
 
-            var topicHandler = (TopicHandler<T>)this.topicHandlers.GetOrAdd(topic, new TopicHandler<T>(serializer, tracer));
-            var handlerGuid = await topicHandler.AddHandlerAsync(handler);
+            var topicHandler = this.topicHandlers.GetOrAdd(topic, 
+                new ConcurrentDictionary<Guid, Func<byte[], Task>>());
+
+            Guid handlerGuid = Guid.NewGuid();
+            topicHandler.GetOrAdd(handlerGuid, async (messageBytes) =>
+            {
+                var busEvent = serializer.Deserialize<BusEvent<T>>(messageBytes);
+                await handler(busEvent);
+            });
 
             await bus.SubscribeAsync(topic);
             return handlerGuid;
@@ -166,14 +120,13 @@ namespace NetBus
 
 
 
-        public List<Guid> GetSubscribers<T>() where T: class
+        public List<Guid> GetSubscribers(BusTopic topic)
         {
             List<Guid> result = new List<Guid>();
 
-            var topic = topicResolver.ResolveTopicName<T>();
             if (topicHandlers.ContainsKey(topic))
             {
-                result.AddRange(topicHandlers[topic].GetHandlers());
+                result.AddRange(topicHandlers[topic].Keys);
             }
             return result;
         }
