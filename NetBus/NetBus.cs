@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace NetBus
 {
@@ -120,15 +121,13 @@ namespace NetBus
 
 
 
-        public List<Guid> GetSubscribers(BusTopic topic)
+        public List<Guid> GetSubscribers(BusTopic topic = null)
         {
-            List<Guid> result = new List<Guid>();
-
-            if (topicHandlers.ContainsKey(topic))
-            {
-                result.AddRange(topicHandlers[topic].Keys);
-            }
-            return result;
+            return topicHandlers
+                .Where(th => topic == null || th.Key == topic)
+                .SelectMany(th => th.Value)
+                .Select(th => th.Key)
+                .ToList();
         }
 
 
