@@ -40,18 +40,9 @@ namespace NetBus
         {
             if (topicHandlers.ContainsKey(topic))
             {
-                
                 foreach (var handler in topicHandlers[topic])
                 {
                     await handler.Value(eventBytes);
-                }
-                if (logger != null)
-                {
-                    logger.Log(LogLevel.Information, new EventId(1, "NAme"), new
-                    {
-                        Application,
-                        Topic = topic
-                    }, null, (o, ex) => $"{o.Topic} -> {o.Application}" );
                 }
             }
         }
@@ -63,15 +54,7 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
 
             await bus.PublishAsync(topic, eventBytes);
-            if (logger!= null)
-            {
-                logger.Log(LogLevel.Information, new EventId(1, "NAme"), new
-                {
-                    Application,
-                    Topic = topic,
-                    BusEvent = busEvent
-                }, null, (o, ex) => $"{o.Application} -> {o.Topic}");
-            }
+            logger.LogPublish(Application, topic, busEvent);
         }
 
         public Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
@@ -130,6 +113,7 @@ namespace NetBus
             {
                 var busEvent = serializer.Deserialize<BusEvent<T>>(messageBytes);
                 await handler(busEvent);
+                logger.LogConsume(Application, topic, busEvent);
             });
 
             await bus.SubscribeAsync(topic);
