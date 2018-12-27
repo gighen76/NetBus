@@ -5,6 +5,7 @@ using NetBus.MockBus;
 using System.IO;
 using NetBus.RabbitBus;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace NetBus.Test.Application
 {
@@ -37,6 +38,11 @@ namespace NetBus.Test.Application
                     configuration.PrefetchCount = 10;
                     configuration.Uri = "amqp://njelcwjj:cnqSAr1DUt1C5JQd6o3ybAj0uCrP1f0S@flamingo.rmq.cloudamqp.com/njelcwjj";
                     configuration.RecoveryInterval = TimeSpan.FromMinutes(5);
+                })
+                .ConfigureLogging((hostContext, configLogging) =>
+                {
+                    configLogging.AddConsole();
+                    configLogging.AddDebug();
                 })
                 .Build()
                 

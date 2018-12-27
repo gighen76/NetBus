@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
-using NetBus.Tracer;
 using System;
 
 namespace NetBus
@@ -21,7 +20,6 @@ namespace NetBus
 
             serviceCollection.TryAddSingleton<ISerializer, DefaultSerializer>();
             serviceCollection.TryAddSingleton<ITopicResolver, DefaultTopicResolver>();
-            serviceCollection.TryAddSingleton<ITracer, DefaultTracer>();
             serviceCollection.TryAddSingleton<NetBus>();
 
             return serviceCollection;

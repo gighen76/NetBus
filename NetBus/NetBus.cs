@@ -1,13 +1,13 @@
 ﻿using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
-using NetBus.Tracer;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace NetBus
 {
@@ -20,17 +20,17 @@ namespace NetBus
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
         private readonly ITopicResolver topicResolver;
-        private readonly ITracer tracer;
+        private readonly ILogger logger;
 
         public NetBus(BaseBus bus, ISerializer serializer, 
-            ITopicResolver topicResolver, ITracer tracer)
+            ITopicResolver topicResolver, ILogger<NetBus> logger = null)
         {
             
             this.bus = bus;
             this.bus.OnMessage += Bus_OnMessage;
             this.serializer = serializer;
             this.topicResolver = topicResolver;
-            this.tracer = tracer;
+            this.logger = logger;
             
         }
 
@@ -40,9 +40,18 @@ namespace NetBus
         {
             if (topicHandlers.ContainsKey(topic))
             {
+                
                 foreach (var handler in topicHandlers[topic])
                 {
                     await handler.Value(eventBytes);
+                }
+                if (logger != null)
+                {
+                    logger.Log(LogLevel.Information, new EventId(1, "NAme"), new
+                    {
+                        Application,
+                        Topic = topic
+                    }, null, (o, ex) => $"{o.Topic} -> {o.Application}" );
                 }
             }
         }
@@ -54,7 +63,15 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
 
             await bus.PublishAsync(topic, eventBytes);
-            await tracer.RegisterBusEventAsync(Application, topic, busEvent);
+            if (logger!= null)
+            {
+                logger.Log(LogLevel.Information, new EventId(1, "NAme"), new
+                {
+                    Application,
+                    Topic = topic,
+                    BusEvent = busEvent
+                }, null, (o, ex) => $"{o.Application} -> {o.Topic}");
+            }
         }
 
         public Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
