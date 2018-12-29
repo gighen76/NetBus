@@ -37,7 +37,7 @@ namespace NetBus.Test
         {
 
             bool subscriberCalled = false;
-            await netbus.SubscribeAsync(async (BusEvent<TestMessage> message) => {
+            await netbus.SubscribeAsync(async (BusEvent busEvent, TestMessage message) => {
 
                 subscriberCalled = true;
                 await Task.Yield();
@@ -59,24 +59,22 @@ namespace NetBus.Test
             int id = 5;
             string messageString = "TEST OK !";
 
-            await netbus.SubscribeAsync(async (BusEvent<TestMessage> message) => {
+            await netbus.SubscribeAsync(async (BusEvent busEvent, TestMessage message) => {
 
                 await netbus.PublishAsync(new MessageTested
                 {
-                    Id = message.Message.Id
-                }, message);
+                    Id = message.Id
+                }, busEvent);
             });
 
-            await netbus.SubscribeAsync(async (BusEvent<MessageTested> message) => {
+            await netbus.SubscribeAsync(async (BusEvent busEvent, MessageTested message) => {
 
                 await netbus.PublishAsync(new MessageFinal
                 {
-                    Id = message.Message.Id,
+                    Id = message.Id,
                     Message = messageString
-                }, message);
+                }, busEvent);
             });
-
-            
 
             var result = await netbus.PublishAndWaitAsync<TestMessage, MessageFinal>(new TestMessage
             {

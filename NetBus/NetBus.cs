@@ -14,8 +14,8 @@ namespace NetBus
     public class NetBus
     {
 
-        private ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Func<byte[],Task>>> topicHandlers = 
-            new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<byte[], Task>>>();
+        private ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Func<BusEvent, byte[],Task>>> topicHandlers = 
+            new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<BusEvent, byte[], Task>>>();
 
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
@@ -31,50 +31,64 @@ namespace NetBus
             this.topicResolver = topicResolver;
         }
 
-        public IBusConfiguration Configuration => bus.Configuration;
-
-
-        private async Task Bus_OnMessage(BusTopic topic, byte[] eventBytes)
+        private async Task Bus_OnMessage(BusTopic topic, BusEvent busEvent, byte[] messageBytes)
         {
             if (topicHandlers.ContainsKey(topic))
             {
                 foreach (var handler in topicHandlers[topic])
                 {
-                    await handler.Value(eventBytes);
+                    await handler.Value(busEvent, messageBytes);
                 }
             }
         }
 
-        public async Task PublishAsync<T>(BusEvent<T> busEvent) where T : class
+        public async Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
         {
-            var eventBytes = serializer.Serialize(busEvent);
+            var messageBytes = serializer.Serialize(message);
 
             var topic = topicResolver.ResolveTopicName<T>();
 
-            await bus.PublishAsync(topic, eventBytes);
+            await bus.PublishAsync(topic, messageBytes, parent);
+
         }
 
-        public Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
+        public async Task<Guid> SubscribeAsync<T>(Func<BusEvent, T, Task> handler) where T : class
         {
-            var busEvent = new BusEvent<T>(message, parent);
+            var topic = topicResolver.ResolveTopicName<T>();
 
-            return PublishAsync(busEvent);
+            var topicHandler = topicHandlers.GetOrAdd(topic,
+                new ConcurrentDictionary<Guid, Func<BusEvent, byte[], Task>>());
+
+            Guid handlerGuid = Guid.NewGuid();
+            topicHandler.GetOrAdd(handlerGuid, async (busEvent, messageBytes) =>
+            {
+                var message = serializer.Deserialize<T>(messageBytes);
+                await handler(busEvent, message);
+            });
+
+            await bus.SubscribeAsync(topic);
+            return handlerGuid;
         }
-        
+
         public async Task<R> PublishAndWaitAsync<T, R>(T message, TimeSpan timeout, BusEvent parent = null) where T : class where R : class
         {
-            var busEvent = new BusEvent<T>(message, parent);
+            parent = parent ?? new BusEvent
+            {
+                Id = Guid.NewGuid(),
+                ParentId = Guid.NewGuid(),
+                OriginId = Guid.NewGuid()
+            };
 
             TaskCompletionSource<R> tcs = new TaskCompletionSource<R>();
             Timer timer = null;
             Guid guid;
-            guid = await SubscribeAsync(async (BusEvent<R> waitedEvent) =>
+            guid = await SubscribeAsync(async (BusEvent waitedEvent, R waitedMessage) =>
             {
-                if (waitedEvent.OriginId == busEvent.OriginId)
+                if (waitedEvent.OriginId == parent.OriginId)
                 {
                     timer.Dispose();
                     await UnsubscribeAsync(guid);
-                    tcs.SetResult(waitedEvent.Message);
+                    tcs.SetResult(waitedMessage);
                 }
             });
             timer = new Timer(state =>
@@ -84,7 +98,7 @@ namespace NetBus
                 tcs.TrySetException(new TimeoutException($"Request timed out."));
             }, null, timeout, TimeSpan.FromMilliseconds(-1));
 
-            await PublishAsync(busEvent);
+            await PublishAsync(message, parent);
 
             return await tcs.Task;
         }
@@ -93,30 +107,10 @@ namespace NetBus
         {
             foreach(var topicHandler in topicHandlers)
             {
-                topicHandler.Value.TryRemove(guid, out Func<byte[], Task> handler);
+                topicHandler.Value.TryRemove(guid, out Func<BusEvent, byte[], Task> handler);
             }
             return Task.CompletedTask;
         }
-
-        public async Task<Guid> SubscribeAsync<T>(Func<BusEvent<T>, Task> handler) where T : class
-        {
-            var topic = topicResolver.ResolveTopicName<T>();
-
-            var topicHandler = this.topicHandlers.GetOrAdd(topic, 
-                new ConcurrentDictionary<Guid, Func<byte[], Task>>());
-
-            Guid handlerGuid = Guid.NewGuid();
-            topicHandler.GetOrAdd(handlerGuid, async (messageBytes) =>
-            {
-                var busEvent = serializer.Deserialize<BusEvent<T>>(messageBytes);
-                await handler(busEvent);
-            });
-
-            await bus.SubscribeAsync(topic);
-            return handlerGuid;
-        }
-
-
 
         public List<Guid> GetSubscribers(BusTopic topic = null)
         {

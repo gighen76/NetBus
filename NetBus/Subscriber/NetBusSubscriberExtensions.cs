@@ -17,11 +17,11 @@ namespace NetBus.Subscriber
 
         public static async Task<Guid> SubscribeSubscriber<T, R>(this NetBus netBus, Func<T> generator) where T : ISubscriber<R> where R : class
         {
-            return await netBus.SubscribeAsync(async (BusEvent<R> busEvent) =>
+            return await netBus.SubscribeAsync(async (BusEvent busEvent, R message) =>
             {
                 BusContext busContext = new BusContext(netBus, busEvent);
                 T subscriber = generator();
-                await subscriber.Execute(busContext, busEvent.Message);
+                await subscriber.Execute(busContext, message);
             });
         }
 

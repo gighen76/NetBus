@@ -77,17 +77,7 @@ namespace NetBus.Test
 
         }
 
-        [TestMethod]
-        public void ShoudDeserializeBusEvent_WithSameId()
-        {
-            var serializer = new DefaultSerializer();
 
-            var busEvent = new BusEvent<TestMessage>(new TestMessage { });
-            var deserializedBusEvent = serializer.Deserialize<BusEvent<TestMessage>>(serializer.Serialize(busEvent));
-
-            Assert.AreEqual(busEvent.Id, deserializedBusEvent.Id);
-
-        }
 
 
     }

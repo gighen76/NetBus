@@ -26,24 +26,17 @@ namespace NetBus.RabbitBus
 
         private async Task Consumer_OnMessage(IDictionary<string, string> headers, byte[] message)
         {
-            if (headers.ContainsKey("TopicName"))
-            {
-                await this.ProcessMessage(new BusTopic(headers["TopicName"]), message);
-            }
+            await this.ProcessMessage(message, headers);
         }
 
-        public override Task PublishAsync(BusTopic topic, byte[] message)
+        protected override Task ConcretePublishAsync(BusTopic topic, byte[] message, IDictionary<string, string> headers)
         {
-            var headers = new Dictionary<string, string>
-            {
-                { "TopicName", topic.Name }
-            };
 
             return publisher.PublishAsync(configuration.Application.Name, topic.Name, headers, message);
 
         }
 
-        public override Task SubscribeAsync(BusTopic topic)
+        protected override Task ConcreteSubscribeAsync(BusTopic topic)
         {
             return consumer.SubscribeAsync(configuration.Application.Name, topic.Name, configuration.PrefetchCount);
         }

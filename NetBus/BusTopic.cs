@@ -46,6 +46,21 @@ namespace NetBus
         {
             return !btLeft.Equals(btRight);
         }
+
+
+        public static bool TryParse(string topicName, out BusTopic busTopic)
+        {
+            try
+            {
+                busTopic = new BusTopic(topicName);
+                return true;
+            }
+            catch
+            {
+                busTopic = null;
+                return false;
+            }
+        }
         
 
     }

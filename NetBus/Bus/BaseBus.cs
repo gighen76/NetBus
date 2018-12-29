@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace NetBus.Bus
@@ -14,8 +16,8 @@ namespace NetBus.Bus
         public IBusConfiguration Configuration { get; }
 
         private readonly object m_eventLock = new object();
-        private Func<BusTopic, byte[], Task> _OnMessage;
-        public event Func<BusTopic, byte[], Task> OnMessage
+        private Func<BusTopic, BusEvent, byte[], Task> _OnMessage;
+        public event Func<BusTopic, BusEvent, byte[], Task> OnMessage
         {
             add
             {
@@ -33,14 +35,51 @@ namespace NetBus.Bus
             }
         }
 
-        protected Task ProcessMessage(BusTopic topic, byte[] message)
+        protected async Task ProcessMessage(byte[] message, IDictionary<string, string> headers)
         {
-            return _OnMessage(topic, message);
+            if (headers.ContainsKey("TopicName") && BusTopic.TryParse(headers["TopicName"], out BusTopic topic) &&
+                headers.ContainsKey("Id") && Guid.TryParse(headers["Id"], out Guid id) &&
+                headers.ContainsKey("ParentId") && Guid.TryParse(headers["ParentId"], out Guid parentId) &&
+                headers.ContainsKey("OriginId") && Guid.TryParse(headers["OriginId"], out Guid originId))
+            {
+
+                var busEvent = new BusEvent
+                {
+                    Id = id,
+                    ParentId = parentId,
+                    OriginId = originId
+                };
+
+                await _OnMessage(topic, busEvent, message);
+            }
         }
 
-        abstract public Task PublishAsync(BusTopic topic, byte[] message);
+        public async Task PublishAsync(BusTopic topic, byte[] message, BusEvent parentEvent = null)
+        {
+            Guid eventId = Guid.NewGuid();
+
+            var headers = new Dictionary<string, string>
+            {
+                { "TopicName", topic.Name },
+                { "Id", eventId.ToString() },
+                { "ParentId", parentEvent?.Id.ToString() ?? eventId.ToString() },
+                { "OriginId", parentEvent?.OriginId.ToString() ?? eventId.ToString() }
+            };
+
+            await ConcretePublishAsync(topic, message, headers);
+
+            headers.Add("TraceType", "PUBLISH");
+            await ConcretePublishAsync(Configuration.TracerTopic, message, headers);
+        }
+
+        public async Task SubscribeAsync(BusTopic topic)
+        {
+            await ConcreteSubscribeAsync(topic);
+        }
+
+        abstract protected Task ConcretePublishAsync(BusTopic topic, byte[] message, IDictionary<string, string> headers);
         
-        abstract public Task SubscribeAsync(BusTopic topic);
+        abstract protected Task ConcreteSubscribeAsync(BusTopic topic);
 
 
 

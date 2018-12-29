@@ -15,15 +15,15 @@ namespace NetBus.MockBus
 
         public HashSet<BusTopic> SubscribedTopics = new HashSet<BusTopic>();
 
-        public override async Task PublishAsync(BusTopic topic, byte[] message)
+        protected override async Task ConcretePublishAsync(BusTopic topic, byte[] message, IDictionary<string, string> headers)
         {
             if (SubscribedTopics.Contains(topic))
             {
-                await ProcessMessage(topic, message);
+                await ProcessMessage(message, headers);
             }
         }
 
-        public override Task SubscribeAsync(BusTopic topic)
+        protected override Task ConcreteSubscribeAsync(BusTopic topic)
         {
             SubscribedTopics.Add(topic);
             return Task<bool>.FromResult(true);
