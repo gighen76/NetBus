@@ -38,7 +38,7 @@ namespace NetBus.Test
                 options.WithArgumentsForConstructor(new[] { busConfiguration });
             });
 
-            Assert.AreEqual(subscriberName, baseBus.Application.Name);
+            Assert.AreEqual(subscriberName, baseBus.Configuration.Application.Name);
         }
 
         [TestMethod]

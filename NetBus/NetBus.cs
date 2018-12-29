@@ -20,21 +20,19 @@ namespace NetBus
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
         private readonly ITopicResolver topicResolver;
-        private readonly ILogger logger;
 
         public NetBus(BaseBus bus, ISerializer serializer, 
-            ITopicResolver topicResolver, ILogger<NetBus> logger = null)
+            ITopicResolver topicResolver)
         {
             
             this.bus = bus;
             this.bus.OnMessage += Bus_OnMessage;
             this.serializer = serializer;
             this.topicResolver = topicResolver;
-            this.logger = logger;
-            
         }
 
-        public BusApplication Application => bus.Application;
+        public IBusConfiguration Configuration => bus.Configuration;
+
 
         private async Task Bus_OnMessage(BusTopic topic, byte[] eventBytes)
         {
@@ -54,7 +52,6 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
 
             await bus.PublishAsync(topic, eventBytes);
-            logger.LogPublish(Application, topic, busEvent);
         }
 
         public Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
@@ -113,7 +110,6 @@ namespace NetBus
             {
                 var busEvent = serializer.Deserialize<BusEvent<T>>(messageBytes);
                 await handler(busEvent);
-                logger.LogConsume(Application, topic, busEvent);
             });
 
             await bus.SubscribeAsync(topic);

@@ -27,32 +27,6 @@ namespace NetBus
 
         }
 
-        static public void LogPublish<T>(this ILogger logger, BusApplication application, BusTopic topic, BusEvent<T> busEvent) where T: class
-        {
-            if (logger != null)
-            {
-                logger.Log(LogLevel.Information, new EventId(1, "PUBLISH"), new
-                {
-                    Application = application,
-                    Topic = topic,
-                    BusEvent = busEvent
-                }, null, (o, ex) => $"{o.Application} -> {o.Topic}");
-            }
-
-        }
-
-        static public void LogConsume(this ILogger logger, BusApplication application, BusTopic topic, BusEvent busEvent)
-        {
-            if (logger != null)
-            {
-                logger.Log(LogLevel.Information, new EventId(2, "CONSUME"), new
-                {
-                    Application = application,
-                    Topic = topic,
-                    BusEvent = busEvent
-                }, null, (o, ex) => $"{o.Application} -> {o.Topic}");
-            }
-        }
 
 
     }

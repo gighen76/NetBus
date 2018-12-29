@@ -11,6 +11,7 @@ namespace NetBus.RabbitBus
     public class RabbitBusConfiguration : IBusConfiguration
     {
         public BusApplication Application { get; set; }
+        public BusTopic TracerTopic { get; set; }
 
         public string Uri { get; set; }
         public TimeSpan RecoveryInterval { get; set; }

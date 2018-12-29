@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace NetBus.Subscriber
 {
-    public static class NetBusExtensions
+    public static class NetBusSubscriberExtensions
     {
 
         public static async Task<Guid> SubscribeSubscriber<T, R>(this NetBus netBus, IServiceProvider serviceProvider) where T : ISubscriber<R> where R : class
@@ -35,7 +35,7 @@ namespace NetBus.Subscriber
             {
                 var messageType = subscriberInterface.GenericTypeArguments[0];
 
-                var method = typeof(NetBusExtensions).GetMethod("SubscribeSubscriber", new Type[] { typeof(NetBus), typeof(IServiceProvider) });
+                var method = typeof(NetBusSubscriberExtensions).GetMethod("SubscribeSubscriber", new Type[] { typeof(NetBus), typeof(IServiceProvider) });
 
                 guids.Add(await (Task<Guid>)method
                     .MakeGenericMethod(new Type[] { subscriberType, messageType })

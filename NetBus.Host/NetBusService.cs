@@ -32,7 +32,11 @@ namespace NetBus.Host
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            
+            var guids = netBus.GetSubscribers();
+            foreach(var guid in guids)
+            {
+                await netBus.UnsubscribeAsync(guid);
+            }
         }
 
     }

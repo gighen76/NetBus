@@ -6,6 +6,8 @@ using System.IO;
 using NetBus.RabbitBus;
 using System;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace NetBus.Test.Application
 {

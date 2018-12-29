@@ -6,14 +6,12 @@ namespace NetBus.Bus
     public abstract class BaseBus
     {
 
-        private readonly IBusConfiguration busConfiguration;
-
         public BaseBus(IBusConfiguration busConfiguration)
         {
-            this.busConfiguration = busConfiguration ?? throw new ArgumentNullException(nameof(busConfiguration));
+            Configuration = busConfiguration ?? throw new ArgumentNullException(nameof(busConfiguration));
         }
 
-        public BusApplication Application => busConfiguration.Application;
+        public IBusConfiguration Configuration { get; }
 
         private readonly object m_eventLock = new object();
         private Func<BusTopic, byte[], Task> _OnMessage;
@@ -43,6 +41,8 @@ namespace NetBus.Bus
         abstract public Task PublishAsync(BusTopic topic, byte[] message);
         
         abstract public Task SubscribeAsync(BusTopic topic);
+
+
 
     }
 }

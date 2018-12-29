@@ -39,13 +39,13 @@ namespace NetBus.RabbitBus
                 { "TopicName", topic.Name }
             };
 
-            return publisher.PublishAsync(Application.Name, topic.Name, headers, message);
+            return publisher.PublishAsync(configuration.Application.Name, topic.Name, headers, message);
 
         }
 
         public override Task SubscribeAsync(BusTopic topic)
         {
-            return consumer.SubscribeAsync(Application.Name, topic.Name, configuration.PrefetchCount);
+            return consumer.SubscribeAsync(configuration.Application.Name, topic.Name, configuration.PrefetchCount);
         }
     }
 }

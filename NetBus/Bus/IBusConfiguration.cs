@@ -5,5 +5,7 @@
 
         BusApplication Application { get; set; }
 
+        BusTopic TracerTopic { get; set; }
+
     }
 }
