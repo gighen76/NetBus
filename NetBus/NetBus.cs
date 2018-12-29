@@ -31,11 +31,11 @@ namespace NetBus
             this.topicResolver = topicResolver;
         }
 
-        private async Task Bus_OnMessage(BusTopic topic, BusEvent busEvent, byte[] messageBytes)
+        private async Task Bus_OnMessage(BusEvent busEvent, byte[] messageBytes)
         {
-            if (topicHandlers.ContainsKey(topic))
+            if (topicHandlers.ContainsKey(busEvent.Topic))
             {
-                foreach (var handler in topicHandlers[topic])
+                foreach (var handler in topicHandlers[busEvent.Topic])
                 {
                     await handler.Value(busEvent, messageBytes);
                 }

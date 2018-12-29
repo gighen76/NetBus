@@ -9,8 +9,8 @@ namespace NetBus
         public Guid Id { get; set; }
         public Guid ParentId { get; set; }
         public Guid OriginId { get; set; }
-        BusTopic Topic { get; set; }
-        BusApplication Application { get; set; }
+        public BusTopic Topic { get; set; }
+        public BusApplication Application { get; set; }
 
     }
 

@@ -40,11 +40,15 @@ namespace NetBus
         
         public static bool operator ==(BusTopic btLeft, BusTopic btRight)
         {
+            if (btLeft is null)
+            {
+                return btRight is null;
+            }
             return btLeft.Equals(btRight);
         }
         public static bool operator !=(BusTopic btLeft, BusTopic btRight)
         {
-            return !btLeft.Equals(btRight);
+            return !(btLeft == btRight);
         }
 
 

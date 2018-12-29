@@ -16,8 +16,8 @@ namespace NetBus.Bus
         public IBusConfiguration Configuration { get; }
 
         private readonly object m_eventLock = new object();
-        private Func<BusTopic, BusEvent, byte[], Task> _OnMessage;
-        public event Func<BusTopic, BusEvent, byte[], Task> OnMessage
+        private Func<BusEvent, byte[], Task> _OnMessage;
+        public event Func<BusEvent, byte[], Task> OnMessage
         {
             add
             {
@@ -38,6 +38,7 @@ namespace NetBus.Bus
         protected async Task ProcessMessage(byte[] message, IDictionary<string, string> headers)
         {
             if (headers.ContainsKey("TopicName") && BusTopic.TryParse(headers["TopicName"], out BusTopic topic) &&
+                headers.ContainsKey("ApplicationName") && BusApplication.TryParse(headers["ApplicationName"], out BusApplication application) &&
                 headers.ContainsKey("Id") && Guid.TryParse(headers["Id"], out Guid id) &&
                 headers.ContainsKey("ParentId") && Guid.TryParse(headers["ParentId"], out Guid parentId) &&
                 headers.ContainsKey("OriginId") && Guid.TryParse(headers["OriginId"], out Guid originId))
@@ -47,10 +48,17 @@ namespace NetBus.Bus
                 {
                     Id = id,
                     ParentId = parentId,
-                    OriginId = originId
+                    OriginId = originId,
+                    Topic = topic,
+                    Application = application
                 };
 
-                await _OnMessage(topic, busEvent, message);
+                await _OnMessage(busEvent, message);
+                if (Configuration.TracerTopic != null)
+                {
+                    await ConcretePublishAsync(Configuration.TracerTopic, message, headers);
+                }
+                
             }
         }
 
@@ -61,15 +69,18 @@ namespace NetBus.Bus
             var headers = new Dictionary<string, string>
             {
                 { "TopicName", topic.Name },
+                { "ApplicationName", Configuration.Application.Name },
                 { "Id", eventId.ToString() },
                 { "ParentId", parentEvent?.Id.ToString() ?? eventId.ToString() },
                 { "OriginId", parentEvent?.OriginId.ToString() ?? eventId.ToString() }
             };
 
             await ConcretePublishAsync(topic, message, headers);
-
-            headers.Add("TraceType", "PUBLISH");
-            await ConcretePublishAsync(Configuration.TracerTopic, message, headers);
+            if (Configuration.TracerTopic != null)
+            {
+                await ConcretePublishAsync(Configuration.TracerTopic, message, headers);
+            }
+            
         }
 
         public async Task SubscribeAsync(BusTopic topic)

@@ -63,5 +63,16 @@ namespace NetBus.Test
         }
 
 
+        [TestMethod]
+        public void NullApplications_MustBeEquals()
+        {
+            BusApplication application1 = null;
+            BusApplication application2 = null;
+            Assert.AreEqual(application1, application2);
+            Assert.IsTrue(application1 == application2);
+
+        }
+
+
     }
 }

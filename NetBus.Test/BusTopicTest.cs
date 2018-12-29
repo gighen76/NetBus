@@ -62,6 +62,16 @@ namespace NetBus.Test
             Assert.AreEqual(topic1.GetHashCode(), topic2.GetHashCode());
         }
 
+        [TestMethod]
+        public void NullTopics_MustBeEquals()
+        {
+            BusTopic topic1 = null;
+            BusTopic topic2 = null;
+            Assert.AreEqual(topic1, topic2);
+            Assert.IsTrue(topic1 == topic2);
+
+        }
+
 
     }
 }
