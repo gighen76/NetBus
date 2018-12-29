@@ -16,8 +16,8 @@ namespace NetBus.Bus
         public IBusConfiguration Configuration { get; }
 
         private readonly object m_eventLock = new object();
-        private Func<BusEvent, byte[], Task> _OnMessage;
-        public event Func<BusEvent, byte[], Task> OnMessage
+        private Func<BusEvent, Task> _OnMessage;
+        public event Func<BusEvent, Task> OnMessage
         {
             add
             {
@@ -50,10 +50,11 @@ namespace NetBus.Bus
                     ParentId = parentId,
                     OriginId = originId,
                     Topic = topic,
-                    Application = application
+                    Application = application,
+                    Message = message
                 };
 
-                await _OnMessage(busEvent, message);
+                await _OnMessage(busEvent);
                 if (Configuration.TracerTopic != null)
                 {
                     await ConcretePublishAsync(Configuration.TracerTopic, message, headers);

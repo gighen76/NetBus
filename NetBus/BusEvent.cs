@@ -12,6 +12,8 @@ namespace NetBus
         public BusTopic Topic { get; set; }
         public BusApplication Application { get; set; }
 
+        public byte[] Message { get; set; }
+
     }
 
 }

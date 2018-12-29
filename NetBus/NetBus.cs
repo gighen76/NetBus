@@ -14,8 +14,8 @@ namespace NetBus
     public class NetBus
     {
 
-        private ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Func<BusEvent, byte[],Task>>> topicHandlers = 
-            new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<BusEvent, byte[], Task>>>();
+        private ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Func<BusEvent,Task>>> topicHandlers = 
+            new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Func<BusEvent, Task>>>();
 
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
@@ -31,13 +31,13 @@ namespace NetBus
             this.topicResolver = topicResolver;
         }
 
-        private async Task Bus_OnMessage(BusEvent busEvent, byte[] messageBytes)
+        private async Task Bus_OnMessage(BusEvent busEvent)
         {
             if (topicHandlers.ContainsKey(busEvent.Topic))
             {
                 foreach (var handler in topicHandlers[busEvent.Topic])
                 {
-                    await handler.Value(busEvent, messageBytes);
+                    await handler.Value(busEvent);
                 }
             }
         }
@@ -57,12 +57,12 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
 
             var topicHandler = topicHandlers.GetOrAdd(topic,
-                new ConcurrentDictionary<Guid, Func<BusEvent, byte[], Task>>());
+                new ConcurrentDictionary<Guid, Func<BusEvent, Task>>());
 
             Guid handlerGuid = Guid.NewGuid();
-            topicHandler.GetOrAdd(handlerGuid, async (busEvent, messageBytes) =>
+            topicHandler.GetOrAdd(handlerGuid, async (busEvent) =>
             {
-                var message = serializer.Deserialize<T>(messageBytes);
+                var message = serializer.Deserialize<T>(busEvent.Message);
                 await handler(busEvent, message);
             });
 
@@ -107,7 +107,7 @@ namespace NetBus
         {
             foreach(var topicHandler in topicHandlers)
             {
-                topicHandler.Value.TryRemove(guid, out Func<BusEvent, byte[], Task> handler);
+                topicHandler.Value.TryRemove(guid, out Func<BusEvent, Task> handler);
             }
             return Task.CompletedTask;
         }
