@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetBus.Bus
@@ -8,12 +10,17 @@ namespace NetBus.Bus
     public abstract class BaseBus
     {
 
+        private readonly ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Action<BusEvent>>> waitForActions
+            = new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Action<BusEvent>>>();
+
         public BaseBus(IBusConfiguration busConfiguration)
         {
             Configuration = busConfiguration ?? throw new ArgumentNullException(nameof(busConfiguration));
         }
 
         public IBusConfiguration Configuration { get; }
+
+        
 
         private readonly object m_eventLock = new object();
         private Func<BusEvent, Task> _OnMessage;
@@ -37,56 +44,69 @@ namespace NetBus.Bus
 
         protected async Task ProcessMessage(byte[] message, IDictionary<string, string> headers)
         {
-            if (headers.ContainsKey("TopicName") && BusTopic.TryParse(headers["TopicName"], out BusTopic topic) &&
-                headers.ContainsKey("ApplicationName") && BusApplication.TryParse(headers["ApplicationName"], out BusApplication application) &&
-                headers.ContainsKey("Id") && Guid.TryParse(headers["Id"], out Guid id) &&
-                headers.ContainsKey("ParentId") && Guid.TryParse(headers["ParentId"], out Guid parentId) &&
-                headers.ContainsKey("OriginId") && Guid.TryParse(headers["OriginId"], out Guid originId))
+            var busEvent = new BusEvent(message, headers);
+
+            if (waitForActions.TryGetValue(busEvent.Topic, out ConcurrentDictionary<Guid, Action<BusEvent>> waitForTopicActions))
             {
-
-                var busEvent = new BusEvent
+                if (waitForTopicActions.TryGetValue(busEvent.OriginId, out Action<BusEvent> action))
                 {
-                    Id = id,
-                    ParentId = parentId,
-                    OriginId = originId,
-                    Topic = topic,
-                    Application = application,
-                    Message = message
-                };
-
-                await _OnMessage(busEvent);
-                if (Configuration.TracerTopic != null)
-                {
-                    await ConcretePublishAsync(Configuration.TracerTopic, message, headers);
+                    action(busEvent);
                 }
-                
             }
-        }
 
-        public async Task PublishAsync(BusTopic topic, byte[] message, BusEvent parentEvent = null)
-        {
-            Guid eventId = Guid.NewGuid();
-
-            var headers = new Dictionary<string, string>
-            {
-                { "TopicName", topic.Name },
-                { "ApplicationName", Configuration.Application.Name },
-                { "Id", eventId.ToString() },
-                { "ParentId", parentEvent?.Id.ToString() ?? eventId.ToString() },
-                { "OriginId", parentEvent?.OriginId.ToString() ?? eventId.ToString() }
-            };
-
-            await ConcretePublishAsync(topic, message, headers);
+            Stopwatch sw = Stopwatch.StartNew();
+            await _OnMessage(busEvent);
+            var elapsedTime = sw.ElapsedMilliseconds;
             if (Configuration.TracerTopic != null)
             {
-                await ConcretePublishAsync(Configuration.TracerTopic, message, headers);
+                busEvent.Headers.Add("TRACE_STATUS", "CONSUME");
+                busEvent.Headers.Add("TRACE_APPLICATION", Configuration.Application.Name);
+                busEvent.Headers.Add("TRACE_TIME", elapsedTime.ToString());
+                await ConcretePublishAsync(Configuration.TracerTopic, busEvent.Message, busEvent.GetBusHeaders());
             }
-            
+
+        }
+
+        public async Task PublishAsync(BusEvent busEvent)
+        {
+            await ConcretePublishAsync(busEvent.Topic, busEvent.Message, busEvent.GetBusHeaders());
+            if (Configuration.TracerTopic != null)
+            {
+                busEvent.Headers.Add("TRACE_STATUS", "PUBLISH");
+                busEvent.Headers.Add("TRACE_APPLICATION", Configuration.Application.Name);
+                await ConcretePublishAsync(Configuration.TracerTopic, busEvent.Message, busEvent.GetBusHeaders());
+            }
         }
 
         public async Task SubscribeAsync(BusTopic topic)
         {
             await ConcreteSubscribeAsync(topic);
+        }
+
+        public async Task<BusEvent> PublishAndWaitAsync(BusEvent busEvent, BusTopic waitForTopic)
+        {
+            TaskCompletionSource<BusEvent> tcs = new TaskCompletionSource<BusEvent>();
+            Timer timer = null;
+
+            var waitForTopicActions = waitForActions.GetOrAdd(waitForTopic, new ConcurrentDictionary<Guid, Action<BusEvent>>());
+            waitForTopicActions.GetOrAdd(busEvent.OriginId, waitedEventBus =>
+            {
+                timer?.Dispose();
+                waitForTopicActions.TryRemove(busEvent.OriginId, out Action<BusEvent> removed);
+                tcs.SetResult(waitedEventBus);
+            });
+            await SubscribeAsync(waitForTopic);
+
+            timer = new Timer(state =>
+            {
+                timer?.Dispose();
+                waitForTopicActions.TryRemove(busEvent.OriginId, out Action<BusEvent> removed);
+                tcs.TrySetException(new TimeoutException($"Request timed out."));
+            }, null, Configuration.WaitTimeout, TimeSpan.FromMilliseconds(-1));
+
+            await PublishAsync(busEvent);
+
+            return await tcs.Task;
         }
 
         abstract protected Task ConcretePublishAsync(BusTopic topic, byte[] message, IDictionary<string, string> headers);

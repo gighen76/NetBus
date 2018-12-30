@@ -42,13 +42,12 @@ namespace NetBus
             }
         }
 
-        public async Task PublishAsync<T>(T message, BusEvent parent = null) where T : class
+        public async Task PublishAsync<T>(T message, BusEvent parentEvent = null) where T : class
         {
             var messageBytes = serializer.Serialize(message);
 
             var topic = topicResolver.ResolveTopicName<T>();
-
-            await bus.PublishAsync(topic, messageBytes, parent);
+            await bus.PublishAsync(new BusEvent(messageBytes, topic, parentEvent));
 
         }
 
@@ -70,37 +69,18 @@ namespace NetBus
             return handlerGuid;
         }
 
-        public async Task<R> PublishAndWaitAsync<T, R>(T message, TimeSpan timeout, BusEvent parent = null) where T : class where R : class
+        public async Task<R> PublishAndWaitAsync<T, R>(T message, BusEvent parentEvent = null) where T : class where R : class
         {
-            parent = parent ?? new BusEvent
-            {
-                Id = Guid.NewGuid(),
-                ParentId = Guid.NewGuid(),
-                OriginId = Guid.NewGuid()
-            };
 
-            TaskCompletionSource<R> tcs = new TaskCompletionSource<R>();
-            Timer timer = null;
-            Guid guid;
-            guid = await SubscribeAsync(async (BusEvent waitedEvent, R waitedMessage) =>
-            {
-                if (waitedEvent.OriginId == parent.OriginId)
-                {
-                    timer.Dispose();
-                    await UnsubscribeAsync(guid);
-                    tcs.SetResult(waitedMessage);
-                }
-            });
-            timer = new Timer(state =>
-            {
-                timer.Dispose();
-                UnsubscribeAsync(guid).Wait();
-                tcs.TrySetException(new TimeoutException($"Request timed out."));
-            }, null, timeout, TimeSpan.FromMilliseconds(-1));
+            var messageBytes = serializer.Serialize(message);
 
-            await PublishAsync(message, parent);
+            var topic = topicResolver.ResolveTopicName<T>();
+            var waitForTopic = topicResolver.ResolveTopicName<R>();
 
-            return await tcs.Task;
+            var waitedEvent = await bus.PublishAndWaitAsync(new BusEvent(messageBytes, topic, parentEvent), waitForTopic);
+
+            return serializer.Deserialize<R>(waitedEvent.Message);
+
         }
         
         public Task UnsubscribeAsync(Guid guid)

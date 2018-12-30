@@ -79,7 +79,7 @@ namespace NetBus.Test
             var result = await netbus.PublishAndWaitAsync<TestMessage, MessageFinal>(new TestMessage
             {
                 Id = id
-            }, TimeSpan.FromSeconds(1));
+            });
 
             Assert.AreEqual(id, result.Id);
             Assert.AreEqual(messageString, result.Message);

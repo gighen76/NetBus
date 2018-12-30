@@ -12,6 +12,7 @@ namespace NetBus.RabbitBus
     {
         public BusApplication Application { get; set; }
         public BusTopic TracerTopic { get; set; }
+        public TimeSpan WaitTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public string Uri { get; set; }
         public TimeSpan RecoveryInterval { get; set; }
