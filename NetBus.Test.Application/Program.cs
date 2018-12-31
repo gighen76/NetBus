@@ -45,6 +45,7 @@ namespace NetBus.Test.Application
                 
                 .ConfigureLogging((hostContext, configLogging) =>
                 {
+                    configLogging.SetMinimumLevel(LogLevel.Trace);
                     configLogging.AddConsole();
                     configLogging.AddDebug();
                 })

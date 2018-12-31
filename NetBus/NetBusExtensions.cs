@@ -22,7 +22,6 @@ namespace NetBus
 
             serviceCollection.TryAddSingleton<ISerializer, DefaultSerializer>();
             serviceCollection.TryAddSingleton<ITopicResolver, DefaultTopicResolver>();
-            serviceCollection.TryAddSingleton<BaseTracer, DefaultTracer>();
             serviceCollection.TryAddSingleton<NetBus>();
 
             return serviceCollection;

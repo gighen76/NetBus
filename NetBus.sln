@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.Test.Application", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.MockBus", "NetBus.MockBus\NetBus.MockBus.csproj", "{054481A0-B11B-40C3-AEEA-821C063899E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetBus.RabbitBus", "NetBus.RabbitBus\NetBus.RabbitBus.csproj", "{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetBus.RabbitBus", "NetBus.RabbitBus\NetBus.RabbitBus.csproj", "{2E66EB50-CDD7-4B55-AC9E-A673E3D6EF9D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

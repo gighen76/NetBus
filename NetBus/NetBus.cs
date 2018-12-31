@@ -1,4 +1,5 @@
-﻿using NetBus.Bus;
+﻿using Microsoft.Extensions.Logging;
+using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
 using NetBus.Tracer;
@@ -20,17 +21,17 @@ namespace NetBus
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
         private readonly ITopicResolver topicResolver;
-        private readonly BaseTracer tracer;
+        private readonly ILogger logger;
 
         public NetBus(BaseBus bus, ISerializer serializer, 
-            ITopicResolver topicResolver, BaseTracer tracer)
+            ITopicResolver topicResolver, ILogger<NetBus> logger)
         {
             
             this.bus = bus;
             this.bus.OnMessage += Bus_OnMessage;
             this.serializer = serializer;
             this.topicResolver = topicResolver;
-            this.tracer = tracer;
+            this.logger = logger;
         }
 
         private async Task Bus_OnMessage(BusEvent busEvent)
@@ -43,7 +44,15 @@ namespace NetBus
                     await handler.Value(busEvent);
                 }
             }
-            tracer.TraceConsume(bus.Configuration.Application, busEvent, stopWatch.Elapsed);
+
+            logger.Log(LogLevel.Trace, new EventId(1), new TracerLog
+            {
+                Application = bus.Configuration.Application,
+                BusEvent = busEvent,
+                ElapsedTime = stopWatch.Elapsed,
+                LogType = TracerLogType.CONSUME
+            }, null, (tl, e) => $"{tl.BusEvent.Topic} -> {tl.Application.Name}");
+
         }
 
         public async Task PublishAsync<T>(T message, BusEvent parentEvent = null) where T : class
@@ -52,7 +61,13 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
             var busEvent = new BusEvent(messageBytes, topic, parentEvent);
             await bus.PublishAsync(busEvent);
-            tracer.TracePublish(bus.Configuration.Application, busEvent);
+
+            logger.Log(LogLevel.Trace, new EventId(2), new TracerLog
+            {
+                Application = bus.Configuration.Application,
+                BusEvent = busEvent,
+                LogType = TracerLogType.PUBLISH
+            }, null, (tl, e) => $"{tl.Application.Name} -> {tl.BusEvent.Topic}");
         }
 
         public async Task<Guid> SubscribeAsync<T>(Func<BusEvent, T, Task> handler) where T : class
