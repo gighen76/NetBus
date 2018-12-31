@@ -1,13 +1,13 @@
 ﻿using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
+using NetBus.Tracer;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Linq;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace NetBus
 {
@@ -20,19 +20,22 @@ namespace NetBus
         private readonly BaseBus bus;
         private readonly ISerializer serializer;
         private readonly ITopicResolver topicResolver;
+        private readonly BaseTracer tracer;
 
         public NetBus(BaseBus bus, ISerializer serializer, 
-            ITopicResolver topicResolver)
+            ITopicResolver topicResolver, BaseTracer tracer)
         {
             
             this.bus = bus;
             this.bus.OnMessage += Bus_OnMessage;
             this.serializer = serializer;
             this.topicResolver = topicResolver;
+            this.tracer = tracer;
         }
 
         private async Task Bus_OnMessage(BusEvent busEvent)
         {
+            Stopwatch stopWatch = Stopwatch.StartNew();
             if (topicHandlers.ContainsKey(busEvent.Topic))
             {
                 foreach (var handler in topicHandlers[busEvent.Topic])
@@ -40,15 +43,16 @@ namespace NetBus
                     await handler.Value(busEvent);
                 }
             }
+            tracer.TraceConsume(bus.Configuration.Application, busEvent, stopWatch.Elapsed);
         }
 
         public async Task PublishAsync<T>(T message, BusEvent parentEvent = null) where T : class
         {
             var messageBytes = serializer.Serialize(message);
-
             var topic = topicResolver.ResolveTopicName<T>();
-            await bus.PublishAsync(new BusEvent(messageBytes, topic, parentEvent));
-
+            var busEvent = new BusEvent(messageBytes, topic, parentEvent);
+            await bus.PublishAsync(busEvent);
+            tracer.TracePublish(bus.Configuration.Application, busEvent);
         }
 
         public async Task<Guid> SubscribeAsync<T>(Func<BusEvent, T, Task> handler) where T : class

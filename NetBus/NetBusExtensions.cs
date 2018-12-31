@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
+using NetBus.Tracer;
 using System;
 
 namespace NetBus
@@ -21,6 +22,7 @@ namespace NetBus
 
             serviceCollection.TryAddSingleton<ISerializer, DefaultSerializer>();
             serviceCollection.TryAddSingleton<ITopicResolver, DefaultTopicResolver>();
+            serviceCollection.TryAddSingleton<BaseTracer, DefaultTracer>();
             serviceCollection.TryAddSingleton<NetBus>();
 
             return serviceCollection;

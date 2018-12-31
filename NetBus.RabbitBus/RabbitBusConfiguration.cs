@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NetBus.Bus;
-using NetBus.RabbitBus.Topology;
+using NetBus.RabbitBus.Consumer;
 using NetBus.RabbitBus.Publisher;
+using NetBus.RabbitBus.Topology;
 using RabbitMQ.Client;
 using System;
-using NetBus.RabbitBus.Consumer;
 
 namespace NetBus.RabbitBus
 {

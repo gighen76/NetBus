@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +11,7 @@ namespace NetBus.Bus
 
         private readonly ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Action<BusEvent>>> waitForActions
             = new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Action<BusEvent>>>();
+
 
         public BaseBus(IBusConfiguration busConfiguration)
         {
@@ -54,28 +54,13 @@ namespace NetBus.Bus
                 }
             }
 
-            Stopwatch sw = Stopwatch.StartNew();
             await _OnMessage(busEvent);
-            var elapsedTime = sw.ElapsedMilliseconds;
-            if (Configuration.TracerTopic != null)
-            {
-                busEvent.Headers.Add("TRACE_STATUS", "CONSUME");
-                busEvent.Headers.Add("TRACE_APPLICATION", Configuration.Application.Name);
-                busEvent.Headers.Add("TRACE_TIME", elapsedTime.ToString());
-                await ConcretePublishAsync(Configuration.TracerTopic, busEvent.Message, busEvent.GetBusHeaders());
-            }
 
         }
 
         public async Task PublishAsync(BusEvent busEvent)
         {
             await ConcretePublishAsync(busEvent.Topic, busEvent.Message, busEvent.GetBusHeaders());
-            if (Configuration.TracerTopic != null)
-            {
-                busEvent.Headers.Add("TRACE_STATUS", "PUBLISH");
-                busEvent.Headers.Add("TRACE_APPLICATION", Configuration.Application.Name);
-                await ConcretePublishAsync(Configuration.TracerTopic, busEvent.Message, busEvent.GetBusHeaders());
-            }
         }
 
         public async Task SubscribeAsync(BusTopic topic)

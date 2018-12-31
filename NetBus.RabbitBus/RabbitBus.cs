@@ -1,10 +1,8 @@
 ﻿using NetBus.Bus;
-using NetBus.RabbitBus.Topology;
+using NetBus.RabbitBus.Consumer;
 using NetBus.RabbitBus.Publisher;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NetBus.RabbitBus.Consumer;
 
 namespace NetBus.RabbitBus
 {

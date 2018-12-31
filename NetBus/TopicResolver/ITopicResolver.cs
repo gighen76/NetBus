@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetBus.TopicResolver
+﻿namespace NetBus.TopicResolver
 {
     public interface ITopicResolver
     {

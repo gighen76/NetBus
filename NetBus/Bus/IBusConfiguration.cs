@@ -9,7 +9,5 @@ namespace NetBus.Bus
 
         TimeSpan WaitTimeout { get; set; }
 
-        BusTopic TracerTopic { get; set; }
-
     }
 }
