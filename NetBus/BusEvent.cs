@@ -7,7 +7,12 @@ namespace NetBus
     public class BusEvent
     {
 
-        const string HEADER_PREFIX = "Header_";
+        public const string HEADER_PREFIX = "Header_";
+        public const string HEADER_TOPIC_NAME = "TopicName";
+        public const string HEADER_ID = "Id";
+        public const string HEADER_PARENT_ID = "ParentId";
+        public const string HEADER_ORIGIN_ID = "OriginId";
+
 
         public BusEvent(byte[] message, BusTopic topic,  BusEvent parentEvent = null)
         {
@@ -22,10 +27,10 @@ namespace NetBus
         public BusEvent(byte[] message, IDictionary<string, string> busHeaders)
         {
 
-            if (!busHeaders.ContainsKey("TopicName") || !BusTopic.TryParse(busHeaders["TopicName"], out BusTopic topic) ||
-                !busHeaders.ContainsKey("Id") || !Guid.TryParse(busHeaders["Id"], out Guid id) ||
-                !busHeaders.ContainsKey("ParentId") || !Guid.TryParse(busHeaders["ParentId"], out Guid parentId) ||
-                !busHeaders.ContainsKey("OriginId") || !Guid.TryParse(busHeaders["OriginId"], out Guid originId))
+            if (!busHeaders.ContainsKey(HEADER_TOPIC_NAME) || !BusTopic.TryParse(busHeaders["TopicName"], out BusTopic topic) ||
+                !busHeaders.ContainsKey(HEADER_ID) || !Guid.TryParse(busHeaders["Id"], out Guid id) ||
+                !busHeaders.ContainsKey(HEADER_PARENT_ID) || !Guid.TryParse(busHeaders["ParentId"], out Guid parentId) ||
+                !busHeaders.ContainsKey(HEADER_ORIGIN_ID) || !Guid.TryParse(busHeaders["OriginId"], out Guid originId))
             {
                 throw new ArgumentException(nameof(busHeaders));
             }
@@ -58,10 +63,10 @@ namespace NetBus
         {
             var busHeaders = new Dictionary<string, string>
             {
-                { "TopicName", Topic.Name },
-                { "Id", Id.ToString() },
-                { "ParentId", ParentId.ToString() },
-                { "OriginId", OriginId.ToString() }
+                { HEADER_TOPIC_NAME, Topic.Name },
+                { HEADER_ID, Id.ToString() },
+                { HEADER_PARENT_ID, ParentId.ToString() },
+                { HEADER_ORIGIN_ID, OriginId.ToString() }
             };
             foreach(var header in Headers)
             {

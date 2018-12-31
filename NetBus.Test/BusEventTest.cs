@@ -18,14 +18,18 @@ namespace NetBus.Test
 
             var parentBusEvent = new BusEvent(message, topic);
             var busEvent = new BusEvent(message, topic, parentBusEvent);
-            busEvent.Headers.Add("test", "value");
+            busEvent.Headers.Add("test1", "value1");
+            busEvent.Headers.Add("test2", "value2");
+            busEvent.Headers.Add("test3", "value3");
 
             var replicatedBusEvent = new BusEvent(busEvent.Message, busEvent.GetBusHeaders());
 
+            Assert.AreEqual(busEvent.Topic, replicatedBusEvent.Topic);
             Assert.AreEqual(busEvent.Id, replicatedBusEvent.Id);
             Assert.AreEqual(busEvent.ParentId, replicatedBusEvent.ParentId);
             Assert.AreEqual(busEvent.OriginId, replicatedBusEvent.OriginId);
             Assert.IsTrue(busEvent.Headers.All(h => replicatedBusEvent.Headers.ContainsKey(h.Key) && replicatedBusEvent.Headers[h.Key] == h.Value));
+
         }
 
         [TestMethod]
