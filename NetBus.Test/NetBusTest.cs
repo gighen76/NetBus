@@ -8,6 +8,8 @@ using System;
 using System.Threading.Tasks;
 using NetBus.Test.Subscriber;
 using NetBus.Subscriber;
+using Microsoft.Extensions.Logging;
+using FakeItEasy;
 
 namespace NetBus.Test
 {
@@ -26,6 +28,10 @@ namespace NetBus.Test
             sc.UseNetBus<MockBusConfiguration>(c =>
             {
                 c.Application = new BusApplication("test");
+            });
+            sc.AddSingleton(sp =>
+            {
+                return A.Fake<ILogger<NetBus>>();
             });
 
             netbus = sc.BuildServiceProvider().GetRequiredService<NetBus>();

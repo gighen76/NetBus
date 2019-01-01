@@ -12,15 +12,12 @@ namespace NetBus.Bus
         private readonly ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid,Action<BusEvent>>> waitForActions
             = new ConcurrentDictionary<BusTopic, ConcurrentDictionary<Guid, Action<BusEvent>>>();
 
-
         public BaseBus(IBusConfiguration busConfiguration)
         {
             Configuration = busConfiguration ?? throw new ArgumentNullException(nameof(busConfiguration));
         }
 
         public IBusConfiguration Configuration { get; }
-
-        
 
         private readonly object m_eventLock = new object();
         private Func<BusEvent, Task> _OnMessage;
