@@ -11,7 +11,6 @@ namespace NetBus.RabbitBus
     public class RabbitBusConfiguration : IBusConfiguration
     {
         public BusApplication Application { get; set; }
-        public BusTopic TracerTopic { get; set; }
         public TimeSpan WaitTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public string Uri { get; set; }

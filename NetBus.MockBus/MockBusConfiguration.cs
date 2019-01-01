@@ -7,7 +7,6 @@ namespace NetBus.MockBus
     public class MockBusConfiguration : IBusConfiguration
     {
         public BusApplication Application { get; set; }
-        public BusTopic TracerTopic { get; set; }
         public TimeSpan WaitTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public void ConfigureServices(IServiceCollection serviceCollection)
