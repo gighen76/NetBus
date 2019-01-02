@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
-using NetBus.Tracer;
 using System;
 
 namespace NetBus

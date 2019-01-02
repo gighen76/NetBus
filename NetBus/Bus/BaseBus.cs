@@ -39,9 +39,9 @@ namespace NetBus.Bus
             }
         }
 
-        protected async Task ProcessMessage(byte[] message, IDictionary<string, string> headers)
+        protected async Task ProcessMessage(byte[] message, IDictionary<string, string> busHeaders)
         {
-            var busEvent = new BusEvent(message, headers);
+            var busEvent = new BusEvent(message, busHeaders);
 
             if (waitForActions.TryGetValue(busEvent.Topic, out ConcurrentDictionary<Guid, Action<BusEvent>> waitForTopicActions))
             {

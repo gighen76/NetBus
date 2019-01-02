@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NetBus.Host;
 using NetBus.RabbitBus;
+using NetBus.Logger;
 using System;
 
 namespace NetBus.Test.Application
@@ -25,6 +26,7 @@ namespace NetBus.Test.Application
                     configLogging.SetMinimumLevel(LogLevel.Trace);
                     configLogging.AddConsole();
                     configLogging.AddDebug();
+                    configLogging.AddNetBusLogger();
                 })
                 .Build()
                 .Run();

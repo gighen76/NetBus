@@ -2,7 +2,7 @@
 using NetBus.Bus;
 using NetBus.Serializer;
 using NetBus.TopicResolver;
-using NetBus.Tracer;
+using NetBus.Logger;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -37,21 +37,32 @@ namespace NetBus
         private async Task Bus_OnMessage(BusEvent busEvent)
         {
             Stopwatch stopWatch = Stopwatch.StartNew();
+            Exception handlerException = null;
             if (topicHandlers.ContainsKey(busEvent.Topic))
             {
-                foreach (var handler in topicHandlers[busEvent.Topic])
+                try
                 {
-                    await handler.Value(busEvent);
+                    foreach (var handler in topicHandlers[busEvent.Topic])
+                    {
+                        await handler.Value(busEvent);
+                    }
                 }
+                catch(Exception ex)
+                {
+                    handlerException = ex;
+                }
+
             }
 
-            logger.Log(LogLevel.Trace, new EventId(1), new TracerLog
+            logger.Log(LogLevel.Trace, new EventId(2), new NetBusLog
             {
-                Application = bus.Configuration.Application,
-                BusEvent = busEvent,
+                ApplicationName = bus.Configuration.Application.Name,
+                Message = busEvent.Message,
+                BusHeaders = busEvent.GetBusHeaders(),
                 ElapsedTime = stopWatch.Elapsed,
-                LogType = TracerLogType.CONSUME
-            }, null, (tl, e) => $"{tl.BusEvent.Topic} -> {tl.Application.Name}");
+                LogType = NetBusLogType.CONSUME,
+                Exception = handlerException
+            }, null, (tl, e) => { var be = tl.GetBusEvent(); return $"{be.Topic} -> {tl.ApplicationName}"; });
 
         }
 
@@ -61,13 +72,15 @@ namespace NetBus
             var topic = topicResolver.ResolveTopicName<T>();
             var busEvent = new BusEvent(messageBytes, topic, parentEvent);
             await bus.PublishAsync(busEvent);
-
-            logger.Log(LogLevel.Trace, new EventId(2), new TracerLog
+ 
+            logger.Log(LogLevel.Trace, new EventId(1), new NetBusLog
             {
-                Application = bus.Configuration.Application,
-                BusEvent = busEvent,
-                LogType = TracerLogType.PUBLISH
-            }, null, (tl, e) => $"{tl.Application.Name} -> {tl.BusEvent.Topic}");
+                ApplicationName = bus.Configuration.Application.Name,
+                Message = busEvent.Message,
+                BusHeaders = busEvent.GetBusHeaders(),
+                LogType = NetBusLogType.PUBLISH
+            }, null, (tl, e) => { var be = tl.GetBusEvent(); return $"{be.Topic} -> {tl.ApplicationName}"; });
+            
         }
 
         public async Task<Guid> SubscribeAsync<T>(Func<BusEvent, T, Task> handler) where T : class
