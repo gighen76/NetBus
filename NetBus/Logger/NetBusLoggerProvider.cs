@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NetBus.Serializer;
 using NetBus.TopicResolver;
 using System;
 using System.Collections.Concurrent;
@@ -51,7 +52,7 @@ namespace NetBus.Logger
 
         private void StartProcessLog()
         {
-
+            var serializer = new DefaultSerializer();
 
             Task.Run(async () =>
             {
@@ -62,6 +63,18 @@ namespace NetBus.Logger
 
                     try
                     {
+                        TcpClient client = new TcpClient();
+                        await client.ConnectAsync("localhost", 30000);
+
+                        using (var stream = client.GetStream())
+                        {
+                            var bytes = serializer.Serialize(log);
+                            await stream.WriteAsync(bytes, 0, bytes.Length);
+                        }
+
+
+                        client.Close();
+                        client.Dispose();
 
                     }
                     catch
